@@ -12,7 +12,7 @@
 # the gated PR that bumps this to 0.1.0 (DIG-Network/dig_ecosystem#1226).
 [package]
 name = "dig-offers"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2021"
 rust-version = "1.75.0"
 license = "Apache-2.0 OR MIT"
