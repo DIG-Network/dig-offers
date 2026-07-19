@@ -126,6 +126,7 @@ performed in tests. Coverage is CI-gated at ≥80% lines.
 
 ## 11. Dependency position
 
-dig-offers consumes `dig-cat` and `dig-nft` (both `00-foundation`) and `chia-wallet-sdk`; it sits
-strictly ABOVE `00-foundation` in the crate hierarchy and is consumed by higher-level aggregators
-(e.g. `dig-wallet-backend`). All dependencies are crates.io releases (no git deps).
+dig-offers builds on `chia-wallet-sdk` (the high-level Offer/settlement API) and standard chia
+crates; it has NO runtime dependency on other DIG crates. The test suite uses `dig-cat` as a
+dev-dependency. All dependencies are crates.io releases (no git deps). It is consumed by
+higher-level aggregators (e.g. `dig-wallet-backend`).

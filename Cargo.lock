@@ -838,20 +838,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dig-nft"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6fba0ba9e93d11f80b8781171cc8a78e437959be0e250d0cbea8f3778f7b652"
-dependencies = [
- "chia-protocol",
- "chia-puzzle-types",
- "chia-wallet-sdk",
- "clvm-traits",
- "clvmr",
- "thiserror 2.0.19",
-]
-
-[[package]]
 name = "dig-offers"
 version = "0.1.0"
 dependencies = [
@@ -863,10 +849,8 @@ dependencies = [
  "chia-sha2 0.26.0",
  "chia-traits 0.26.0",
  "chia-wallet-sdk",
- "clvm-traits",
  "clvmr",
  "dig-cat",
- "dig-nft",
  "hex",
  "indexmap",
  "thiserror 2.0.19",
