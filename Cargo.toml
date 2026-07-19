@@ -1,0 +1,38 @@
+# dig-offers — the DIG Network canonical Chia offers expert crate.
+#
+# A pure, key-free, network-free SpendBundle-builder library for Chia offers (CHIP-0023/CHIP-0024
+# settlement). dig-offers constructs the exact CoinSpends for every offer operation — make, take,
+# combine, cancel, and summarize/inspect — over any asset (XCH / CAT / NFT), and reports the exact
+# signatures a caller must produce. It NEVER holds a secret key, NEVER signs, and NEVER touches the
+# network. The consumer signs the reported messages, assembles/combines the SpendBundle, and
+# broadcasts. See SPEC.md for the normative contract.
+#
+# This is the genesis scaffold (v0.0.0, unpublished). The v0.1.0 foundation — the type surface, the
+# error taxonomy, the offer decode/summarize, and the make/take/combine/cancel builders — lands via
+# the gated PR that bumps this to 0.1.0 (DIG-Network/dig_ecosystem#1226).
+[package]
+name = "dig-offers"
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.75.0"
+license = "Apache-2.0 OR MIT"
+description = "The DIG Network canonical Chia offers expert crate: a pure, key-free, network-free SpendBundle-builder for Chia offers (make, take, combine, cancel, summarize) over XCH/CAT/NFT. Never holds a key, never signs, never broadcasts."
+repository = "https://github.com/DIG-Network/dig-offers"
+readme = "README.md"
+keywords = ["dig", "chia", "offers", "settlement", "swap"]
+categories = ["cryptography::cryptocurrencies", "api-bindings"]
+
+[dependencies]
+chia-wallet-sdk = "0.30"
+chia-protocol = "0.26"
+chia-puzzle-types = "0.26"
+clvm-traits = "0.26"
+clvmr = "0.14"
+thiserror = "2"
+dig-cat = "0.1"
+dig-nft = "0.1"
+
+[dev-dependencies]
+chia-sdk-test = "0.30"
+hex = "0.4"
+anyhow = "1"
