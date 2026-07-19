@@ -181,3 +181,29 @@ pub struct UnsignedCancel {
     /// The unsigned coin spends that reclaim the offered coins to the maker.
     pub coin_spends: Vec<CoinSpend>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn offer_asset_amount_reports_fungible_value() {
+        assert_eq!(OfferAsset::Xch(500).amount(), 500);
+        assert_eq!(
+            OfferAsset::Cat {
+                asset_id: Bytes32::default(),
+                amount: 42
+            }
+            .amount(),
+            42
+        );
+        // An NFT is non-fungible — it carries no fungible amount.
+        assert_eq!(
+            OfferAsset::Nft {
+                launcher_id: Bytes32::default()
+            }
+            .amount(),
+            0
+        );
+    }
+}

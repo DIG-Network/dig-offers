@@ -11,7 +11,7 @@
 //! dig-offers **never holds a secret key, never signs, and never touches the network.** Every
 //! builder takes only public inputs (puzzle hashes, asset ids, public keys, and coins with their
 //! lineage proofs) and appends unsigned coin spends to a caller-owned
-//! [`SpendContext`](chia_wallet_sdk::driver::SpendContext). The consumer signs the messages
+//! [`chia_wallet_sdk::driver::SpendContext`]. The consumer signs the messages
 //! reported by [`required_signatures`], assembles/combines the `SpendBundle`, and broadcasts. This
 //! keeps the signing decision — and the secret key — entirely on the caller's side of the identity
 //! boundary (#908).

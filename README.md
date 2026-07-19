@@ -23,10 +23,38 @@ and broadcasts.
   requested, arbitrage, royalties) without committing.
 - **offer id** — stable, deterministic identifier for persistence + dedup.
 
+## The two-phase flow (make / take)
+
+Building and assembling are split so the caller signs BETWEEN them, in ONE shared
+`SpendContext`:
+
+```text
+make:  make_build(ctx, offered, requested, fee) -> UnsignedMake
+       required_signatures(&unsigned.coin_spends, agg_sig_me)  // caller signs
+       make_assemble(ctx, signed_bundle, requested_payments, requested_asset_info) -> "offer1…"
+
+take:  take_build(ctx, offer1_str, funds, fee) -> UnsignedTake
+       required_signatures(&unsigned.coin_spends, agg_sig_me)  // caller signs (taker half only)
+       take_combine(unsigned.offer, signed_taker_bundle) -> SpendBundle  // atomic settlement
+```
+
+The two phases of each flow MUST share the same `SpendContext`: a parsed/requested NFT carries an
+allocator-relative metadata pointer that only survives in that context. `take_combine` and
+`combine` outputs are allocator-free and safe to hand out.
+
 ## Custody model
 
-Identity-agnostic (#908): builders take public inputs only. The crate BUILDS spends; the caller
-SIGNS. See `SPEC.md` for the normative contract.
+Identity-agnostic (#908): builders take public inputs only — puzzle hashes, asset ids, coins with
+lineage proofs, and `PublicKey`s (`owner_keys: IndexMap<Bytes32, PublicKey>`). The crate BUILDS
+unsigned spends and REPORTS the required signatures; the caller SIGNS. No function accepts, stores,
+derives, or returns a secret key, and the crate never produces a BLS signature or performs I/O. See
+`SPEC.md` for the normative contract.
+
+## Dependency position
+
+`dig-offers` sits above the `00-foundation` layer: it consumes `dig-cat` and `dig-nft` (both
+`00-foundation`) and `chia-wallet-sdk`, and is consumed by higher-level aggregators (e.g.
+`dig-wallet-backend`). All dependencies are crates.io releases (no git deps).
 
 ## License
 
