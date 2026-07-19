@@ -66,3 +66,72 @@ fn reject_shared_offered_coins(bundles: &[SpendBundle]) -> Result<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use chia_sdk_test::Simulator;
+    use chia_wallet_sdk::driver::SpendContext;
+
+    use crate::test_support::sample_cat_for_xch;
+    use crate::{combine, summarize, Error, OfferAsset};
+
+    #[test]
+    fn combine_requires_at_least_two_offers() -> anyhow::Result<()> {
+        let mut sim = Simulator::new();
+        let mut ctx = SpendContext::new();
+        let (offer, _m, _a) = sample_cat_for_xch(&mut sim, &mut ctx, 80_000, 50_000)?;
+        assert!(matches!(combine(&[&offer]), Err(Error::InvalidInput(_))));
+        Ok(())
+    }
+
+    #[test]
+    fn combine_rejects_shared_offered_coin() -> anyhow::Result<()> {
+        let mut sim = Simulator::new();
+        let mut ctx = SpendContext::new();
+        let (offer, _m, _a) = sample_cat_for_xch(&mut sim, &mut ctx, 80_000, 50_000)?;
+        // The same offer twice shares every offered coin — a double-spend.
+        let err = combine(&[&offer, &offer]).unwrap_err();
+        assert!(matches!(&err, Error::Incompatible(m) if m.contains("same offered coin")));
+        Ok(())
+    }
+
+    #[test]
+    fn combine_rejects_a_malformed_member() -> anyhow::Result<()> {
+        let mut sim = Simulator::new();
+        let mut ctx = SpendContext::new();
+        let (offer, _m, _a) = sample_cat_for_xch(&mut sim, &mut ctx, 80_000, 50_000)?;
+        assert!(matches!(
+            combine(&[&offer, "not an offer"]),
+            Err(Error::Decode(_))
+        ));
+        Ok(())
+    }
+
+    #[test]
+    fn combine_merges_two_non_conflicting_offers() -> anyhow::Result<()> {
+        let mut sim = Simulator::new();
+        let mut ctx = SpendContext::new();
+        let (offer_a, _m, asset_a) = sample_cat_for_xch(&mut sim, &mut ctx, 80_000, 50_000)?;
+        let (offer_b, _n, asset_b) = sample_cat_for_xch(&mut sim, &mut ctx, 70_000, 40_000)?;
+
+        let combined = combine(&[&offer_a, &offer_b])?;
+        assert!(combined.starts_with("offer1"));
+
+        // The combined one-sided offer carries both offered CAT legs and both requested XCH totals.
+        let summary = summarize(&combined)?;
+        assert!(summary.offered.contains(&OfferAsset::Cat {
+            asset_id: asset_a,
+            amount: 80_000
+        }));
+        assert!(summary.offered.contains(&OfferAsset::Cat {
+            asset_id: asset_b,
+            amount: 70_000
+        }));
+        assert_eq!(
+            summary.requested,
+            vec![OfferAsset::Xch(90_000)],
+            "requested XCH totals combine"
+        );
+        Ok(())
+    }
+}

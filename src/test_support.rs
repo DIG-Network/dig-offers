@@ -99,3 +99,76 @@ pub(crate) fn signed_bundle(
 ) -> SpendBundle {
     SpendBundle::new(coin_spends, signature)
 }
+
+/// Drive the full maker flow through the PUBLIC API: build → sign (test caller) → assemble,
+/// returning the `offer1…` string. `secret_keys` stands in for the caller that signs.
+pub(crate) fn maker_offer(
+    ctx: &mut SpendContext,
+    offered: crate::OfferedSide<'_>,
+    requested: crate::RequestedSide,
+    fee: u64,
+    secret_keys: &[SecretKey],
+) -> anyhow::Result<String> {
+    let unsigned = crate::make_build(ctx, offered, requested, fee)?;
+    assert!(
+        unsigned
+            .coin_spends
+            .iter()
+            .all(|cs| cs.coin.parent_coin_info != Bytes32::default()),
+        "make_build must produce only real (non-phantom) maker spends"
+    );
+    let signature = sign_for_sim(&unsigned.coin_spends, secret_keys)?;
+    Ok(crate::make_assemble(
+        ctx,
+        signed_bundle(unsigned.coin_spends, signature),
+        unsigned.requested_payments,
+        unsigned.requested_asset_info,
+    )?)
+}
+
+/// Build a standard one-sided offer that offers `offered_cat` of a fresh CAT and requests
+/// `requested_xch` mojos to the maker, returning the `offer1…` string, the maker, and the asset id.
+pub(crate) fn sample_cat_for_xch(
+    sim: &mut Simulator,
+    ctx: &mut SpendContext,
+    offered_cat: u64,
+    requested_xch: u64,
+) -> anyhow::Result<(String, BlsPairWithCoin, Bytes32)> {
+    let maker = sim.bls(0);
+    let (maker_cat, asset) = issue_cat_to(sim, ctx, &maker, offered_cat)?;
+    let offered = crate::OfferedSide {
+        change_puzzle_hash: maker.puzzle_hash,
+        owner_keys: owner_keys(&maker),
+        xch_coins: vec![],
+        cat_coins: vec![maker_cat],
+        nfts: vec![],
+        offer_xch: 0,
+        offer_cats: vec![(asset, offered_cat)],
+        _pd: std::marker::PhantomData,
+    };
+    let requested = crate::RequestedSide {
+        payee_puzzle_hash: maker.puzzle_hash,
+        xch: requested_xch,
+        cats: vec![],
+        nfts: vec![],
+    };
+    let offer_str = maker_offer(ctx, offered, requested, 0, std::slice::from_ref(&maker.sk))?;
+    Ok((offer_str, maker, asset))
+}
+
+/// Drive the full taker flow through the PUBLIC API: build → sign (test caller) → combine,
+/// returning the atomic settlement `SpendBundle`.
+pub(crate) fn taker_settle(
+    ctx: &mut SpendContext,
+    offer_str: &str,
+    funds: crate::TakerFunds<'_>,
+    fee: u64,
+    secret_keys: &[SecretKey],
+) -> anyhow::Result<SpendBundle> {
+    let unsigned = crate::take_build(ctx, offer_str, funds, fee)?;
+    let signature = sign_for_sim(&unsigned.coin_spends, secret_keys)?;
+    Ok(crate::take_combine(
+        unsigned.offer,
+        signed_bundle(unsigned.coin_spends, signature),
+    ))
+}

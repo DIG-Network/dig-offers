@@ -303,3 +303,98 @@ fn select_cats(coins: &[Cat], asset_id: Bytes32, need: u64) -> Result<Vec<Cat>> 
     }
     Ok(chosen)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::marker::PhantomData;
+
+    use super::*;
+    use chia_sdk_test::Simulator;
+
+    use crate::test_support::owner_keys;
+    use crate::types::{OfferedSide, RequestedSide};
+
+    /// An offered side that offers nothing (used for negative tests).
+    fn empty_offered<'a>(change: Bytes32) -> OfferedSide<'a> {
+        OfferedSide {
+            change_puzzle_hash: change,
+            owner_keys: IndexMap::new(),
+            xch_coins: vec![],
+            cat_coins: vec![],
+            nfts: vec![],
+            offer_xch: 0,
+            offer_cats: vec![],
+            _pd: PhantomData,
+        }
+    }
+
+    #[test]
+    fn make_build_rejects_offering_nothing() {
+        let mut ctx = SpendContext::new();
+        let requested = RequestedSide {
+            payee_puzzle_hash: Bytes32::default(),
+            xch: 1,
+            cats: vec![],
+            nfts: vec![],
+        };
+        let err =
+            make_build(&mut ctx, empty_offered(Bytes32::default()), requested, 0).unwrap_err();
+        assert!(matches!(&err, Error::InvalidInput(m) if m.contains("offer at least one")));
+    }
+
+    #[test]
+    fn make_build_rejects_requesting_nothing() {
+        let mut ctx = SpendContext::new();
+        let mut offered = empty_offered(Bytes32::default());
+        offered.offer_xch = 1;
+        let requested = RequestedSide {
+            payee_puzzle_hash: Bytes32::default(),
+            xch: 0,
+            cats: vec![],
+            nfts: vec![],
+        };
+        let err = make_build(&mut ctx, offered, requested, 0).unwrap_err();
+        assert!(matches!(&err, Error::InvalidInput(m) if m.contains("request at least one")));
+    }
+
+    #[test]
+    fn make_build_rejects_insufficient_offered_funds() {
+        let mut ctx = SpendContext::new();
+        let mut offered = empty_offered(Bytes32::default());
+        offered.offer_xch = 1_000; // no XCH coins provided → shortfall
+        let requested = RequestedSide {
+            payee_puzzle_hash: Bytes32::default(),
+            xch: 1,
+            cats: vec![],
+            nfts: vec![],
+        };
+        let err = make_build(&mut ctx, offered, requested, 0).unwrap_err();
+        assert!(matches!(&err, Error::InvalidInput(m) if m.contains("insufficient XCH to offer")));
+    }
+
+    #[test]
+    fn make_build_rejects_zero_requested_cat_amount() {
+        let mut sim = Simulator::new();
+        let mut ctx = SpendContext::new();
+        let maker = sim.bls(1_000_000);
+
+        let offered = OfferedSide {
+            change_puzzle_hash: maker.puzzle_hash,
+            owner_keys: owner_keys(&maker),
+            xch_coins: vec![maker.coin],
+            cat_coins: vec![],
+            nfts: vec![],
+            offer_xch: 100_000,
+            offer_cats: vec![],
+            _pd: PhantomData,
+        };
+        let requested = RequestedSide {
+            payee_puzzle_hash: maker.puzzle_hash,
+            xch: 0,
+            cats: vec![(Bytes32::from([7; 32]), 0)],
+            nfts: vec![],
+        };
+        let err = make_build(&mut ctx, offered, requested, 0).unwrap_err();
+        assert!(matches!(&err, Error::InvalidInput(m) if m.contains("greater than zero")));
+    }
+}

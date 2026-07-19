@@ -26,3 +26,40 @@ pub fn offer_id(offer_str: &str) -> Result<Bytes32> {
     hasher.update(&bytes);
     Ok(Bytes32::from(hasher.finalize()))
 }
+
+#[cfg(test)]
+mod tests {
+    use chia_sdk_test::Simulator;
+    use chia_wallet_sdk::driver::{decode_offer, encode_offer, SpendContext};
+
+    use crate::offer_id;
+    use crate::test_support::sample_cat_for_xch;
+
+    #[test]
+    fn offer_id_is_stable_across_re_encoding() -> anyhow::Result<()> {
+        let mut sim = Simulator::new();
+        let mut ctx = SpendContext::new();
+        let (offer_str, _maker, _asset) = sample_cat_for_xch(&mut sim, &mut ctx, 80_000, 50_000)?;
+
+        // Re-encoding the decoded bundle yields another valid encoding of the SAME offer; its id
+        // must match — the id is over the uncompressed bundle, independent of the encoding.
+        let re_encoded = encode_offer(&decode_offer(&offer_str)?)?;
+        assert_eq!(offer_id(&offer_str)?, offer_id(&re_encoded)?);
+        Ok(())
+    }
+
+    #[test]
+    fn distinct_offers_have_distinct_ids() -> anyhow::Result<()> {
+        let mut sim = Simulator::new();
+        let mut ctx = SpendContext::new();
+        let (offer_a, _m, _a) = sample_cat_for_xch(&mut sim, &mut ctx, 80_000, 50_000)?;
+        let (offer_b, _n, _b) = sample_cat_for_xch(&mut sim, &mut ctx, 70_000, 40_000)?;
+        assert_ne!(offer_id(&offer_a)?, offer_id(&offer_b)?);
+        Ok(())
+    }
+
+    #[test]
+    fn offer_id_rejects_non_offer() {
+        assert!(offer_id("not an offer").is_err());
+    }
+}

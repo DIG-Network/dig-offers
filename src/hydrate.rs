@@ -34,3 +34,25 @@ pub fn parse(ctx: &mut SpendContext, spend_bundle: &SpendBundle) -> Result<Offer
     Offer::from_spend_bundle(ctx, spend_bundle)
         .map_err(|e| Error::decode(format!("could not parse offer: {e}")))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn decode_rejects_non_offer_prefix() {
+        let err = decode("hello world").unwrap_err();
+        assert!(matches!(&err, Error::Decode(m) if m.contains("not a Chia offer")));
+    }
+
+    #[test]
+    fn decode_rejects_blank_string() {
+        assert!(matches!(decode("   "), Err(Error::Decode(_))));
+    }
+
+    #[test]
+    fn decode_rejects_malformed_payload() {
+        // Correct prefix but a bad bech32 payload fails at decode, not with a panic.
+        assert!(matches!(decode("offer1qqzh3w"), Err(Error::Decode(_))));
+    }
+}

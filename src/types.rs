@@ -145,6 +145,7 @@ pub struct OfferSummary {
 /// signatures with [`required_signatures`](crate::required_signatures), signs, aggregates into a
 /// `SpendBundle`, and passes that plus `requested_payments` + `requested_asset_info` back to
 /// `make_assemble`. dig-offers never produces the signature.
+#[derive(Debug)]
 pub struct UnsignedMake {
     /// The unsigned coin spends the caller must sign.
     pub coin_spends: Vec<CoinSpend>,
@@ -163,6 +164,7 @@ pub struct UnsignedMake {
 /// **The custody boundary.** `coin_spends` are the TAKER's unsigned spends only; the maker's half
 /// is already signed inside `offer`. The caller signs `coin_spends`, wraps them in a `SpendBundle`,
 /// and calls [`take_combine`](crate::take_combine) with `offer` to produce the atomic settlement.
+#[derive(Debug)]
 pub struct UnsignedTake {
     /// The taker's unsigned coin spends (funding + received-asset routing).
     pub coin_spends: Vec<CoinSpend>,
@@ -174,6 +176,7 @@ pub struct UnsignedTake {
 
 /// The unsigned artifact of [`cancel_build`](crate::cancel_build): the reclaim coin spends the
 /// maker must sign to invalidate an outstanding offer.
+#[derive(Debug)]
 pub struct UnsignedCancel {
     /// The unsigned coin spends that reclaim the offered coins to the maker.
     pub coin_spends: Vec<CoinSpend>,
