@@ -23,16 +23,20 @@ keywords = ["dig", "chia", "offers", "settlement", "swap"]
 categories = ["cryptography::cryptocurrencies", "api-bindings"]
 
 [dependencies]
-chia-wallet-sdk = "0.30"
+chia-wallet-sdk = { version = "0.30", features = ["offer-compression"] }
 chia-protocol = "0.26"
 chia-puzzle-types = "0.26"
+chia-sha2 = "0.26"
+chia-traits = "0.26"
 clvm-traits = "0.26"
 clvmr = "0.14"
 thiserror = "2"
+indexmap = "2"
 dig-cat = "0.1"
 dig-nft = "0.1"
 
 [dev-dependencies]
 chia-sdk-test = "0.30"
+chia-puzzles = "0.20"
 hex = "0.4"
 anyhow = "1"
