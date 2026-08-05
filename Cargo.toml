@@ -12,7 +12,7 @@
 # the gated PR that bumps this to 0.1.0 (DIG-Network/dig_ecosystem#1226).
 [package]
 name = "dig-offers"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.75.0"
 license = "Apache-2.0 OR MIT"
@@ -23,18 +23,18 @@ keywords = ["dig", "chia", "offers", "settlement", "swap"]
 categories = ["cryptography::cryptocurrencies", "api-bindings"]
 
 [dependencies]
-chia-wallet-sdk = { version = "0.30", features = ["offer-compression"] }
-chia-protocol = "0.26"
-chia-puzzle-types = "0.26"
-chia-sha2 = "0.26"
-chia-traits = "0.26"
-clvmr = "0.14"
+chia-wallet-sdk = { version = "0.34", features = ["offer-compression"] }
+chia-protocol = "0.36.1"
+chia-puzzle-types = "0.36.1"
+chia-sha2 = "0.36.1"
+chia-traits = "0.36.1"
+clvmr = "0.16.2"
 thiserror = "2"
 indexmap = "2"
 
 [dev-dependencies]
-chia-sdk-test = "0.30"
-chia-puzzles = "0.20"
+chia-sdk-test = "0.34"
+chia-puzzles = "0.20.3"
 hex = "0.4"
 anyhow = "1"
-dig-cat = "0.1"
+dig-cat = "0.2"
