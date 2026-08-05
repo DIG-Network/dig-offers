@@ -45,9 +45,10 @@ pub(crate) fn issue_cat_to(
     let funding = sim.new_coin(owner.puzzle_hash, amount);
     let p2 = StandardLayer::new(owner.pk);
     let hint = ctx.hint(owner.puzzle_hash)?;
-    let (issue, cats) = Cat::issue_with_coin(
+    let (issue, cats) = Cat::single_issuance(
         ctx,
         funding.coin_id(),
+        None,
         amount,
         Conditions::new().create_coin(owner.puzzle_hash, amount, hint),
     )?;
