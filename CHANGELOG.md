@@ -4,6 +4,11 @@ All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org) and
 [Conventional Commits](https://www.conventionalcommits.org).
 
+## [0.3.0] - 2026-08-25
+
+### Chores
+- **deps:** Bump chia-wallet-sdk to 0.36 (#3)
+
 ## [0.2.0] - 2026-08-05
 
 ### Features
